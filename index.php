@@ -1,40 +1,14 @@
 <?php
 
 require_once('includes/database.php');
-require_once('includes/header.php');
-require_once('includes/login.php');
 require_once('helpers/funcs.php');
 
-?>
-
-<?php if (isset($_COOKIE['loggedIn']) && compare_session_id($_COOKIE['loggedInUsername'], $_COOKIE['sessionId']) === true){ ?>
-    <div class="card" style="width: 15rem;left:1em;top:1em;position:fixed;">
-        <div class="card-text text-center p-3">
-            <form method="post" enctype="multipart/form-data">
-                <input type="file" name="uploadFile" class="form-control form-control-sm"/><br/>
-                <input type="text" name="tags" placeholder="Add tags separated by spaces." class="form-control form-control-sm"/><br/>
-                <input type="submit" name="upload" value="Upload" class="btn btn-outline-dark btn-sm"/>
-            </form>
-        </div>
-    </div>
-<?php } ?>
-
-<div style="margin: auto;width: 50%;z-index:10">
-    <h1><a href="<?php echo $site_url ?>" style="color:black;text-decoration: none;">shobi.</a></h1>
-    <form method="get">
-        <input type="text" style="width:30%" name="tag" placeholder="Input a tag" class="form-control form-control-sm mb-3"/>
-        <button type="submit" class="btn btn-outline-dark btn-sm">search for tag</button>
-    </form>
-</div>
-<div class="card text-center p-3 mb-3" style="margin: auto;width: 50%;z-index:1">
-    <div class="card-text">
-        
-<?php 
 
 // Check database
 if ($conn === false) {
     die("ERROR: Could not connect. " . mysqli_connect_error());
 }
+
 
 // User attempted login
 if (isset($_POST['login'])) {
@@ -78,6 +52,7 @@ elseif (isset($_POST['logout'])) {
     setcookie("sessionId", NULL, time() - 3600, $site_path);
     header("Refresh:0; url=$site_url");
 }
+
 
 if (isset($_GET['delete'])){
     $id = $_GET['delete'];
@@ -136,6 +111,33 @@ if (isset($_POST['upload']) && isset($_COOKIE['loggedIn']) && compare_session_id
     header("Refresh:0");
 }
 
+require_once('includes/login.php');
+require_once('includes/header.php');
+
+if (isset($_COOKIE['loggedIn']) && compare_session_id($_COOKIE['loggedInUsername'], $_COOKIE['sessionId']) === true){ ?>
+    <div class="card" style="width: 15rem;left:1em;top:1em;position:fixed;">
+        <div class="card-text text-center p-3">
+            <form method="post" enctype="multipart/form-data">
+                <input type="file" name="uploadFile" class="form-control form-control-sm"/><br/>
+                <input type="text" name="tags" placeholder="Add tags separated by spaces." class="form-control form-control-sm"/><br/>
+                <input type="submit" name="upload" value="Upload" class="btn btn-outline-dark btn-sm"/>
+            </form>
+        </div>
+    </div>
+<?php } ?>
+
+<div style="margin: auto;width: 50%;z-index:10">
+    <h1><a href="<?php echo $site_url ?>" style="color:black;text-decoration: none;">shobi.</a></h1>
+    <form method="get">
+        <input type="text" style="width:30%" name="tag" placeholder="Input a tag" class="form-control form-control-sm mb-3"/>
+        <button type="submit" class="btn btn-outline-dark btn-sm">search for tag</button>
+    </form>
+</div>
+<div class="card text-center p-3 mb-3" style="margin: auto;width: 50%;z-index:1">
+    <div class="card-text">
+        
+<?php 
+
 // Start displaying the posts
 if (isset($_GET['tag'])) {
     $tag = $_GET['tag'] . ",";
@@ -152,7 +154,7 @@ if (isset($_GET['tag'])) {
                 $createdAt = $row['createdAt'];
                 $tags = $row['tags'];
                 $id = $row['id'];
-                if (str_contains($tags, $tag)) {
+                if (strpos($tags, $tag) !== false) {
                     create_post($imgLink, $author, $createdAt, $tags, $id);
                 }
             }
