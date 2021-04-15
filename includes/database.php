@@ -1,12 +1,16 @@
 <?php
 
-// Params to connect to a db
-$dbHost = "localhost";
-$dbUser = "root";
-$dbPass = "";
-$dbName = "";
+$env = parse_ini_file('./.env');
 
-$clientId = "[insert imgur api token]";
+// Params to connect to a db
+$dbHost = $env['dbHost'];
+$dbUser = $env['dbUser'];
+$dbPass = $env['dbPass'];
+$dbName = $env['dbName'];
+
+$pagination = 5;
+
+$clientId = $env['clientId'];
 
 $site_domain = "http://localhost";
 $site_path = "/shobi";

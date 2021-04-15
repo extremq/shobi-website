@@ -63,14 +63,10 @@ if (isset($_GET['delete'])){
 
 
 // User attempted file upload
-if (isset($_POST['upload']) && isset($_COOKIE['loggedIn']) && compare_session_id($_COOKIE['loggedInUsername'], $_COOKIE['sessionId']) === true) {
-    if ($_FILES['uploadFile']['error'] === 1) {
-        die("An error has occured.");
-    }
+if (isset($_POST['upload']) && $_FILES['uploadFile']['error'] === 0 && isset($_COOKIE['loggedIn']) && compare_session_id($_COOKIE['loggedInUsername'], $_COOKIE['sessionId']) === true) {
     if ($_FILES['uploadFile']['size'] > 10000000) {
         die("Filesize must be lower than 10MB.");
     }
-
     $filetype = explode('/',mime_content_type($_FILES['uploadFile']['tmp_name']));
     if ($filetype[0] !== 'image') {
         die('Invalid type.');
@@ -108,7 +104,7 @@ if (isset($_POST['upload']) && isset($_COOKIE['loggedIn']) && compare_session_id
     
     $sql = "INSERT INTO `posts`(`author`, `content`, `tags`) VALUES ('{$_COOKIE['loggedInUsername']}', '$imageLink', '$tags')";
     mysqli_query($conn, $sql);
-    header("Refresh:0");
+    header("Refresh:0;url=$site_url");
 }
 
 require_once('includes/login.php');
@@ -140,9 +136,15 @@ if (isset($_COOKIE['loggedIn']) && compare_session_id($_COOKIE['loggedInUsername
 
 // Start displaying the posts
 if (isset($_GET['tag'])) {
+    $page = 0;
+    if (isset($_GET['page'])) {
+        $page = (int) $_GET['page'] - 1;
+    }
+    if ($page < 1) $page = 0;
+    $page *= $pagination;
     $tag = $_GET['tag'] . ",";
     
-    $sql = "SELECT * FROM posts WHERE 1 ORDER BY id DESC";
+    $sql = "SELECT * FROM posts WHERE LOCATE('$tag', posts.tags) ORDER BY createdAt DESC LIMIT $page,$pagination;";
 
     $result = mysqli_query($conn, $sql);
     if ($result !== false) {
@@ -154,9 +156,7 @@ if (isset($_GET['tag'])) {
                 $createdAt = $row['createdAt'];
                 $tags = $row['tags'];
                 $id = $row['id'];
-                if (strpos($tags, $tag) !== false) {
-                    create_post($imgLink, $author, $createdAt, $tags, $id);
-                }
+                create_post($imgLink, $author, $createdAt, $tags, $id);
             }
         }
     }
@@ -166,7 +166,13 @@ if (isset($_GET['tag'])) {
 }
 // Display all posts
 else {
-    $sql = "SELECT * FROM posts WHERE 1 ORDER BY id DESC LIMIT 10";
+    $page = 0;
+    if (isset($_GET['page'])) {
+        $page = (int) $_GET['page'] - 1;
+    }
+    if ($page < 1) $page = 0;
+    $page *= $pagination;
+    $sql = "SELECT * FROM posts ORDER BY createdAt DESC LIMIT $page,$pagination;";
 
     $result = mysqli_query($conn, $sql);
     if ($result->num_rows > 0) {
