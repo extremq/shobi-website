@@ -74,4 +74,3 @@ function append_get($param, $val) {
 }
 
 ?>
-	
